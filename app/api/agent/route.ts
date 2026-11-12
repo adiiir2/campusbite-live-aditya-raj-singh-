@@ -22,10 +22,10 @@ export async function POST(request: Request) {
     const quota = /429|quota|RESOURCE_EXHAUSTED/i.test(message);
     const busy = /503|504|UNAVAILABLE|DEADLINE|high demand|timed out|abort|fetch failed/i.test(message);
     const text = quota
-      ? "The Gemini free quota for this key is used up. Wait a minute, or switch to a fresh API key."
+      ? "The AI services are at their free usage limit. Wait a minute and try again."
       : busy
         ? "Gemini is busy right now. Please send the request again in a few seconds."
         : "Something went wrong while handling that request. Please try again.";
-    return NextResponse.json({ error: text, detail: message.slice(0, 300) }, { status: quota ? 429 : busy ? 503 : 500 });
+    return NextResponse.json({ error: text }, { status: quota ? 429 : busy ? 503 : 500 });
   }
 }

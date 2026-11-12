@@ -7,6 +7,7 @@ import { tools } from "./tools";
 import { toFunctionDeclarations } from "./defineTool";
 import { buildSystemPrompt } from "./systemPrompt";
 import type { AgentResult, AgentStep } from "./types";
+import { groqAvailable, runGroqAgent } from "./groq";
 
 /** Stops the agent from looping forever and using up your Gemini quota. */
 const MAX_ROUNDS = 8;
@@ -18,27 +19,36 @@ const MAX_ROUNDS = 8;
  * 3. Send the results back to Gemini.
  * 4. Repeat until Gemini gives a final text answer (or MAX_ROUNDS is reached).
  */
-// Vercel stops a request after 60 seconds, so we give up a little earlier.
-const DEADLINE_MS = 50_000;
 
-// Gemini sometimes answers 503 "high demand". Try again while there is time left.
-async function withRetry<T>(fn: () => Promise<T>, startedAt: number): Promise<T> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const busy = /503|UNAVAILABLE|429|RESOURCE_EXHAUSTED|timed out|abort/i.test(String(err));
-      const timeLeft = DEADLINE_MS - (Date.now() - startedAt);
-      if (!busy || attempt >= 4 || timeLeft < 14_000) throw err;
-      await new Promise((r) => setTimeout(r, 1000));
-    }
+// Gemini sometimes answers 503 "high demand". Try once more, then let the backup model answer.
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!/503|UNAVAILABLE|timed out|abort/i.test(String(err))) throw err;
+    return await fn();
   }
 }
 
+/** Gemini first. If it fails (busy, quota, bad key), the backup model answers with the same tools. */
 export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
-  const ai = getGemini();
-  const startedAt = Date.now();
   const steps: AgentStep[] = [];
+  try {
+    return await runGeminiAgent(messages, steps);
+  } catch (err) {
+    console.error("[agent] Gemini failed:", String(err).slice(0, 200));
+    if (!groqAvailable()) throw err;
+
+    // A change that already went through must not be repeated by the backup.
+    if (steps.some((s) => s.writes && s.ok)) {
+      return { reply: "The change went through (see the tool details above), but I could not write the summary because the AI service failed.", steps };
+    }
+    return await runGroqAgent(messages, runTool);
+  }
+}
+
+async function runGeminiAgent(messages: ChatMessage[], steps: AgentStep[]): Promise<AgentResult> {
+  const ai = getGemini();
   const functionDeclarations = toFunctionDeclarations(tools);
 
   const contents: Content[] = messages.map((m) => ({
@@ -56,7 +66,7 @@ export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
         temperature: 0.2,
         httpOptions: { timeout: 12_000 },
       },
-    }), startedAt);
+    }));
 
     const calls = response.functionCalls ?? [];
 

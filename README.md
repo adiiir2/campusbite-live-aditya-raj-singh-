@@ -3,6 +3,7 @@
 A dispatcher types plain English ("Assign the pharmacy delivery to the best driver"). A Gemini agent checks deliveries and drivers, then assigns them. The database enforces the rules, so the AI cannot break them.
 
 **Stack:** Next.js · TypeScript · Tailwind · Supabase · Gemini function calling · Zod · Vercel
+**Backup model:** if Gemini is busy or out of free quota, the same tools run on Groq (`GROQ_API_KEY`).
 **Live link:** <add Vercel URL> · **Team:** <add names and roles>
 
 ## Agent tools
