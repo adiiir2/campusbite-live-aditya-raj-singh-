@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : "Agent failed";
     console.error("[agent]", message);
     const quota = /429|quota|RESOURCE_EXHAUSTED/i.test(message);
-    const busy = /503|UNAVAILABLE|high demand/i.test(message);
+    const busy = /503|UNAVAILABLE|high demand|timed out|abort/i.test(message);
     const text = quota
       ? "Too many requests to Gemini. Wait a minute and try again."
       : busy

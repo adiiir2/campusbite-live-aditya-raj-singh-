@@ -18,21 +18,26 @@ const MAX_ROUNDS = 8;
  * 3. Send the results back to Gemini.
  * 4. Repeat until Gemini gives a final text answer (or MAX_ROUNDS is reached).
  */
-// Gemini sometimes answers 503 "high demand". Wait a little and try again (up to 3 tries).
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+// Vercel stops a request after 60 seconds, so we give up a little earlier.
+const DEADLINE_MS = 50_000;
+
+// Gemini sometimes answers 503 "high demand". Try again while there is time left.
+async function withRetry<T>(fn: () => Promise<T>, startedAt: number): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
       return await fn();
     } catch (err) {
-      const busy = /503|UNAVAILABLE|429|RESOURCE_EXHAUSTED/.test(String(err));
-      if (!busy || attempt >= 3) throw err;
-      await new Promise((r) => setTimeout(r, attempt * 5000));
+      const busy = /503|UNAVAILABLE|429|RESOURCE_EXHAUSTED|timed out|abort/i.test(String(err));
+      const timeLeft = DEADLINE_MS - (Date.now() - startedAt);
+      if (!busy || attempt >= 3 || timeLeft < 15_000) throw err;
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
 }
 
 export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
   const ai = getGemini();
+  const startedAt = Date.now();
   const steps: AgentStep[] = [];
   const functionDeclarations = toFunctionDeclarations(tools);
 
@@ -49,8 +54,9 @@ export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
         systemInstruction: buildSystemPrompt(),
         tools: [{ functionDeclarations }],
         temperature: 0.2,
+        httpOptions: { timeout: 20_000 },
       },
-    }));
+    }), startedAt);
 
     const calls = response.functionCalls ?? [];
 
