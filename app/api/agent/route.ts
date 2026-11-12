@@ -20,13 +20,12 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : "Agent failed";
     console.error("[agent]", message);
     const quota = /429|quota|RESOURCE_EXHAUSTED/i.test(message);
-    return NextResponse.json(
-      {
-        error: quota
-          ? "Gemini quota reached. Wait a minute and try again."
-          : message,
-      },
-      { status: quota ? 429 : 500 }
-    );
+    const busy = /503|UNAVAILABLE|high demand/i.test(message);
+    const text = quota
+      ? "Too many requests to Gemini. Wait a minute and try again."
+      : busy
+        ? "Gemini is busy right now. Please send the request again in a few seconds."
+        : "Something went wrong while handling that request. Please try again.";
+    return NextResponse.json({ error: text }, { status: quota ? 429 : busy ? 503 : 500 });
   }
 }

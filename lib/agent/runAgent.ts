@@ -18,15 +18,15 @@ const MAX_ROUNDS = 8;
  * 3. Send the results back to Gemini.
  * 4. Repeat until Gemini gives a final text answer (or MAX_ROUNDS is reached).
  */
-// Gemini sometimes answers 503 "high demand". Wait a little and try again (up to 4 tries).
+// Gemini sometimes answers 503 "high demand". Wait a little and try again (up to 3 tries).
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
       return await fn();
     } catch (err) {
-      const busy = String(err).includes("503") || String(err).includes("UNAVAILABLE");
-      if (!busy || attempt >= 4) throw err;
-      await new Promise((r) => setTimeout(r, attempt * 3000));
+      const busy = /503|UNAVAILABLE|429|RESOURCE_EXHAUSTED/.test(String(err));
+      if (!busy || attempt >= 3) throw err;
+      await new Promise((r) => setTimeout(r, attempt * 5000));
     }
   }
 }
