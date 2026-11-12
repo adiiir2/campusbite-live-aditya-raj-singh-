@@ -29,8 +29,8 @@ async function withRetry<T>(fn: () => Promise<T>, startedAt: number): Promise<T>
     } catch (err) {
       const busy = /503|UNAVAILABLE|429|RESOURCE_EXHAUSTED|timed out|abort/i.test(String(err));
       const timeLeft = DEADLINE_MS - (Date.now() - startedAt);
-      if (!busy || attempt >= 3 || timeLeft < 15_000) throw err;
-      await new Promise((r) => setTimeout(r, 2000));
+      if (!busy || attempt >= 4 || timeLeft < 14_000) throw err;
+      await new Promise((r) => setTimeout(r, 1000));
     }
   }
 }
@@ -54,7 +54,7 @@ export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
         systemInstruction: buildSystemPrompt(),
         tools: [{ functionDeclarations }],
         temperature: 0.2,
-        httpOptions: { timeout: 20_000 },
+        httpOptions: { timeout: 12_000 },
       },
     }), startedAt);
 
