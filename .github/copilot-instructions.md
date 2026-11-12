@@ -1,9 +1,13 @@
-# CampusBite project rules
-- Goal: turn this starter into CampusBite, the SRM campus canteen ordering agent. Students order food in plain English; the agent checks the menu, wallet and pickup slots, then places the order. A kitchen screen shows live orders.
-- The logged-in student is always CURRENT_STUDENT_ID = "S001" (create it in lib/campusbite.ts). Never take a student id as a tool argument.
-- Stack: Next.js App Router, React, TypeScript, Tailwind CSS, Supabase, Gemini function calling, Zod.
-- Agent tools live in lib/agent/tools.ts. Each tool uses defineTool() with a Zod schema, like the existing listTasks example.
-- Database (already created from seed/campusbite.sql): tables menu_items, wallets, pickup_slots, orders, order_items.
-- Placing and cancelling orders must use the database functions place_order(p_student_id, p_slot_id, p_items) and cancel_order(p_student_id, p_order_id) through getSupabase().rpc(). Never update wallets or stock directly from TypeScript.
-- Only files in lib/ and app/api/ may call getSupabase(). Never use the Supabase secret key in components.
-- Prices are whole rupees, shown as "Rs 70". Keep code simple, with short comments.
+# DispatchIQ project rules
+- Problem: Delivery Dispatch Agent (logistics). A dispatcher types plain English; the agent checks pending deliveries and drivers, then assigns or unassigns deliveries. A dispatch board shows live data.
+- Stack: Next.js App Router, React, TypeScript, Tailwind CSS, Supabase (server only), Gemini function calling, Zod.
+- Tables (seed/logistics_dispatch.sql):
+  - dispatchers(id, name, depot)
+  - drivers(id, dispatcher_id, name, vehicle bike|van|truck, capacity_kg, zone, max_active, status available|on_break|off_duty)
+  - deliveries(id, dispatcher_id, customer, address, zone, weight_kg, priority urgent|normal, deadline, status pending|assigned|in_transit|delivered|cancelled, driver_id, created_at)
+- The logged-in dispatcher is CURRENT_USER_ID = "D001" (lib/currentUser.ts). Never take a user id as a tool argument.
+- Agent tools live in lib/agent/tools.ts and use defineTool() with a Zod schema; descriptions start with "Use this when...".
+- Assigning and unassigning must use the database functions assign_delivery(p_dispatcher_id, p_delivery_id, p_driver_id) and unassign_delivery(p_dispatcher_id, p_delivery_id) through getSupabase().rpc(). Never update deliveries directly from TypeScript.
+- Business rules (enforced in the database): driver must be available, in the same zone, vehicle capacity >= parcel weight, below max_active open deliveries; only pending deliveries can be assigned; only "assigned" (not in_transit) can be unassigned; dispatchers only touch their own data.
+- Only files in lib/ and app/api/ may call getSupabase(). Never use the Supabase secret key in components. Never commit .env.local.
+- Weights in kg, deadlines as "11:00 am". Keep code simple, with short comments.

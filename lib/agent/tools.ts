@@ -2,82 +2,156 @@ import "server-only";
 import { z } from "zod";
 import { defineTool, type AgentTool } from "./defineTool";
 import { getSupabase } from "../supabase";
-import { isoDate } from "../schemas";
+import { CURRENT_USER_ID, formatTime } from "../currentUser";
 
-/*
- * EXAMPLE TOOLS for the starter "tasks" table (seed/00_starter_example.sql).
- * They show the pattern: 1 read tool + 2 write tools.
- *
- * YOUR JOB: replace these with tools for your problem statement.
- * Tips:
- *  - Write the description as "Use this when ..." so Gemini knows WHEN to call it.
- *  - Describe every field, including its format (for example YYYY-MM-DD).
- *  - Return small, clean objects. Gemini reads what you return.
- *  - Throw an Error with a clear message when something is wrong. The agent will explain it.
- */
+// Supabase may return a joined row as an object or a one-item array.
+function one<T>(v: T | T[] | null): T | null {
+  return Array.isArray(v) ? (v[0] ?? null) : v;
+}
 
-const listTasks = defineTool({
-  name: "listTasks",
+// ---------------------------------------------------------------- read tools
+
+const getPendingDeliveries = defineTool({
+  name: "getPendingDeliveries",
   description:
-    "Use this when the user wants to see their tasks. Can filter by status. Returns at most 20 tasks, newest first.",
+    "Use this when the dispatcher wants to see deliveries that still need a driver. Optional zone filter. Urgent first, then earliest deadline.",
   schema: z.object({
-    status: z
-      .enum(["open", "done", "all"])
-      .optional()
-      .describe("Which tasks to return. Default is all."),
+    zone: z.string().optional().describe("Area name, for example 'T Nagar', 'Adyar' or 'Guindy'"),
   }),
-  run: async ({ status }) => {
-    let query = getSupabase()
-      .from("tasks")
-      .select("id, title, due_date, status")
-      .order("created_at", { ascending: false })
+  run: async ({ zone }) => {
+    let q = getSupabase()
+      .from("deliveries")
+      .select("id, customer, address, zone, weight_kg, priority, deadline")
+      .eq("dispatcher_id", CURRENT_USER_ID)
+      .eq("status", "pending")
+      .order("deadline", { ascending: true })
       .limit(20);
-    if (status && status !== "all") query = query.eq("status", status);
-    const { data, error } = await query;
+    if (zone) q = q.ilike("zone", zone);
+    const { data, error } = await q;
     if (error) throw new Error(error.message);
-    return { count: data.length, tasks: data };
+    const rows = data
+      .map((d) => ({ ...d, deadline: formatTime(d.deadline) }))
+      .sort((a, b) => Number(b.priority === "urgent") - Number(a.priority === "urgent"));
+    return { count: rows.length, deliveries: rows };
   },
 });
 
-const createTask = defineTool({
-  name: "createTask",
-  description: "Use this when the user asks to add, create or remember a new task.",
-  writes: true,
-  schema: z.object({
-    title: z.string().trim().min(1).max(200).describe("Short title of the task"),
-    due_date: isoDate.optional().describe("Due date in YYYY-MM-DD format, if the user gave one"),
-  }),
-  run: async ({ title, due_date }) => {
-    const { data, error } = await getSupabase()
-      .from("tasks")
-      .insert({ title, due_date: due_date ?? null })
-      .select("id, title, due_date, status")
-      .single();
-    if (error) throw new Error(error.message);
-    return { created: data };
-  },
-});
-
-const completeTask = defineTool({
-  name: "completeTask",
+const getAvailableDrivers = defineTool({
+  name: "getAvailableDrivers",
   description:
-    "Use this when the user says a task is finished. Needs the task id, so call listTasks first if you do not know it.",
-  writes: true,
+    "Use this when the dispatcher asks which drivers are free, or before assigning a delivery. Shows each driver's zone, vehicle, capacity and open deliveries.",
   schema: z.object({
-    id: z.number().int().positive().describe("The id of the task"),
+    zone: z.string().optional().describe("Only drivers covering this area"),
+    min_capacity_kg: z.number().int().positive().optional().describe("Only vehicles that can carry at least this many kg"),
   }),
-  run: async ({ id }) => {
-    const { data, error } = await getSupabase()
-      .from("tasks")
-      .update({ status: "done" })
-      .eq("id", id)
-      .select("id, title, status")
-      .maybeSingle();
+  run: async ({ zone, min_capacity_kg }) => {
+    let q = getSupabase()
+      .from("drivers")
+      .select("id, name, vehicle, capacity_kg, zone, max_active, status")
+      .eq("dispatcher_id", CURRENT_USER_ID)
+      .eq("status", "available")
+      .limit(20);
+    if (zone) q = q.ilike("zone", zone);
+    if (min_capacity_kg) q = q.gte("capacity_kg", min_capacity_kg);
+    const { data: drivers, error } = await q;
     if (error) throw new Error(error.message);
-    if (!data) throw new Error(`No task found with id ${id}`);
-    return { updated: data };
+
+    // count open deliveries per driver
+    const { data: open, error: e2 } = await getSupabase()
+      .from("deliveries")
+      .select("driver_id")
+      .eq("dispatcher_id", CURRENT_USER_ID)
+      .in("status", ["assigned", "in_transit"]);
+    if (e2) throw new Error(e2.message);
+    const load = new Map<number, number>();
+    for (const o of open) load.set(o.driver_id, (load.get(o.driver_id) ?? 0) + 1);
+
+    const rows = drivers.map((d) => ({
+      ...d,
+      open_deliveries: load.get(d.id) ?? 0,
+      has_room: (load.get(d.id) ?? 0) < d.max_active,
+    }));
+    return { count: rows.length, drivers: rows };
   },
 });
 
-/** Every tool in this list is given to Gemini. Add your own tools here. */
-export const tools: AgentTool[] = [listTasks, createTask, completeTask];
+const getMyDispatches = defineTool({
+  name: "getMyDispatches",
+  description:
+    "Use this when the dispatcher wants to see deliveries already given to drivers (assigned or on the road), or what one driver is carrying.",
+  schema: z.object({
+    driver_name: z.string().optional().describe("Part of a driver's name to filter by"),
+  }),
+  run: async ({ driver_name }) => {
+    const { data, error } = await getSupabase()
+      .from("deliveries")
+      .select("id, customer, zone, weight_kg, priority, deadline, status, drivers(name)")
+      .eq("dispatcher_id", CURRENT_USER_ID)
+      .in("status", ["assigned", "in_transit"])
+      .order("deadline", { ascending: true })
+      .limit(20);
+    if (error) throw new Error(error.message);
+    let rows = data.map((d) => ({
+      id: d.id,
+      customer: d.customer,
+      zone: d.zone,
+      weight_kg: d.weight_kg,
+      priority: d.priority,
+      deadline: formatTime(d.deadline),
+      status: d.status,
+      driver: one(d.drivers)?.name ?? null,
+    }));
+    if (driver_name) rows = rows.filter((r) => r.driver?.toLowerCase().includes(driver_name.toLowerCase()));
+    return { count: rows.length, deliveries: rows };
+  },
+});
+
+// ---------------------------------------------------------------- write tools
+// The database functions check every business rule and make the change.
+
+const assignDelivery = defineTool({
+  name: "assignDelivery",
+  description:
+    "Use this when the dispatcher clearly asks to give a pending delivery to a driver. Needs real ids, so call the read tools first.",
+  writes: true,
+  schema: z.object({
+    delivery_id: z.number().int().positive().describe("Delivery id from getPendingDeliveries"),
+    driver_id: z.number().int().positive().describe("Driver id from getAvailableDrivers"),
+  }),
+  run: async ({ delivery_id, driver_id }) => {
+    const { data, error } = await getSupabase().rpc("assign_delivery", {
+      p_dispatcher_id: CURRENT_USER_ID,
+      p_delivery_id: delivery_id,
+      p_driver_id: driver_id,
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+});
+
+const unassignDelivery = defineTool({
+  name: "unassignDelivery",
+  description:
+    "Use this when the dispatcher wants to take a delivery away from its driver so it can be reassigned. Works only before pickup.",
+  writes: true,
+  schema: z.object({
+    delivery_id: z.number().int().positive().describe("Delivery id from getMyDispatches"),
+  }),
+  run: async ({ delivery_id }) => {
+    const { data, error } = await getSupabase().rpc("unassign_delivery", {
+      p_dispatcher_id: CURRENT_USER_ID,
+      p_delivery_id: delivery_id,
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  },
+});
+
+/** Every tool in this list is given to Gemini. */
+export const tools: AgentTool[] = [
+  getPendingDeliveries,
+  getAvailableDrivers,
+  getMyDispatches,
+  assignDelivery,
+  unassignDelivery,
+];
