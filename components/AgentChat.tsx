@@ -18,6 +18,7 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,14 +35,24 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
     setError("");
 
     try {
-      const res = await fetch("/api/agent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Only the last 20 messages are sent, to keep requests small.
-        body: JSON.stringify({ messages: next.slice(-20).map(({ role, text }) => ({ role, text })) }),
-      });
-      const data = await res.json().catch(() => null);
-      if (!res.ok || !data) throw new Error(data?.error ?? "The server took too long. Please send it again.");
+      // When Gemini is busy (503) or the request times out (504), try again automatically.
+      let res: Response | null = null;
+      let data: (AgentResult & { error?: string }) | null = null;
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Only the last 20 messages are sent, to keep requests small.
+          body: JSON.stringify({ messages: next.slice(-20).map(({ role, text }) => ({ role, text })) }),
+        });
+        data = await res.json().catch(() => null);
+        if (res.ok && data) break;
+        if (res.status !== 503 && res.status !== 504) break;
+        setNotice(`Gemini is busy, retrying (${attempt}/6)...`);
+        await new Promise((r) => setTimeout(r, 3000));
+      }
+      setNotice("");
+      if (!res || !res.ok || !data) throw new Error(data?.error ?? "The server took too long. Please send it again.");
       const result = data as AgentResult;
       setMessages([...next, { role: "model", text: result.reply, steps: result.steps }]);
       if (result.steps.some((s) => s.writes && s.ok)) onDataChanged?.();
@@ -96,7 +107,7 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
           </div>
         ))}
 
-        {loading && <p className="text-sm text-slate-500">Agent is working...</p>}
+        {loading && <p className="text-sm text-slate-500">{notice || "Agent is working..."}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div ref={bottomRef} />
       </div>
