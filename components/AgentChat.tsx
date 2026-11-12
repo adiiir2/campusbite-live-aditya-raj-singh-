@@ -54,12 +54,12 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
 
   return (
     <div className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-        <h2 className="font-semibold">Dispatch assistant</h2>
+      <div className="border-b border-slate-200 bg-white px-4 py-3">
+        <h2 className="flex items-center gap-2 font-semibold"><span className="h-2 w-2 rounded-full bg-indigo-500" />Dispatch assistant</h2>
         <p className="text-xs text-slate-500">Type a request. Every lookup and change it makes is listed under its reply.</p>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50/60 p-4">
         {messages.length === 0 && (
           <div className="space-y-2">
             <p className="text-sm text-slate-500">Quick requests</p>
@@ -67,7 +67,7 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
               <button
                 key={p}
                 onClick={() => send(p)}
-                className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-50"
+                className="block w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-left text-sm text-slate-700 transition hover:border-indigo-300 hover:bg-indigo-50"
               >
                 {p}
               </button>
@@ -80,13 +80,13 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[85%] rounded-2xl bg-slate-900 px-3 py-2 text-sm text-white"
+                  ? "max-w-[85%] rounded-2xl rounded-br-md bg-indigo-600 px-3.5 py-2 text-sm text-white shadow-sm"
                   : "max-w-[85%] space-y-2"
               }
             >
               {m.steps && m.steps.length > 0 && <ToolSteps steps={m.steps} />}
               {m.role === "model" ? (
-                <div className="whitespace-pre-wrap rounded-2xl bg-slate-100 px-3 py-2 text-sm">
+                <div className="whitespace-pre-wrap rounded-2xl rounded-bl-md border border-slate-200 bg-white px-3.5 py-2 text-sm shadow-sm">
                   <FormattedText text={m.text} />
                 </div>
               ) : (
@@ -112,12 +112,12 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="e.g. Send the Adyar grocery order to Ravi"
-          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+          className="flex-1 rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded-xl bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
         >
           Send
         </button>
