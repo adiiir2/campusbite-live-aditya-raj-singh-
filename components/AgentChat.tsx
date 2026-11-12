@@ -53,26 +53,21 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
   }
 
   return (
-    <div className="glass fade-up flex h-[72vh] flex-col overflow-hidden rounded-3xl">
-      <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-        <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold text-white">
-            <span className="pulse-dot h-2.5 w-2.5 rounded-full bg-fuchsia-400 text-fuchsia-400" />
-            Dispatch assistant
-          </h2>
-          <p className="mt-0.5 text-xs text-slate-400">Type a request. Every lookup and change shows under its reply.</p>
-        </div>
+    <div className="card flex h-[70vh] flex-col overflow-hidden">
+      <div className="border-b border-slate-200 px-5 py-3.5">
+        <h2 className="text-sm font-semibold text-slate-900">Dispatch assistant</h2>
+        <p className="text-xs text-slate-500">Type a request. Every lookup and change shows under its reply.</p>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-5">
+      <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">
         {messages.length === 0 && (
-          <div className="space-y-2.5">
-            <p className="text-xs font-medium uppercase tracking-widest text-slate-500">Quick requests</p>
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Suggested requests</p>
             {SAMPLE_PROMPTS.map((p) => (
               <button
                 key={p}
                 onClick={() => send(p)}
-                className="card-hover block w-full rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-slate-200 hover:border-fuchsia-400/40"
+                className="block w-full rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-left text-sm text-slate-700 hover:border-blue-300 hover:bg-blue-50"
               >
                 {p}
               </button>
@@ -81,17 +76,11 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
         )}
 
         {messages.map((m, i) => (
-          <div key={i} className={`fade-up ${m.role === "user" ? "flex justify-end" : "flex justify-start"}`}>
-            <div
-              className={
-                m.role === "user"
-                  ? "max-w-[85%] rounded-2xl rounded-br-md bg-gradient-to-r from-indigo-500 to-fuchsia-600 px-4 py-2.5 text-sm text-white shadow-lg shadow-fuchsia-900/30"
-                  : "max-w-[90%] space-y-2"
-              }
-            >
+          <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+            <div className={m.role === "user" ? "max-w-[85%] rounded-2xl rounded-br-sm bg-blue-600 px-3.5 py-2 text-sm text-white" : "max-w-[90%] space-y-2"}>
               {m.steps && m.steps.length > 0 && <ToolSteps steps={m.steps} />}
               {m.role === "model" ? (
-                <div className="whitespace-pre-wrap rounded-2xl rounded-bl-md border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm leading-relaxed text-slate-100">
+                <div className="whitespace-pre-wrap rounded-2xl rounded-bl-sm border border-slate-200 bg-white px-3.5 py-2 text-sm leading-relaxed text-slate-800">
                   <FormattedText text={m.text} />
                 </div>
               ) : (
@@ -102,11 +91,11 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
         ))}
 
         {loading && (
-          <div className="typing rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 w-fit">
+          <div className="typing w-fit rounded-2xl border border-slate-200 bg-white px-3.5 py-3">
             <span /><span /><span />
           </div>
         )}
-        {error && <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
+        {error && <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <div ref={bottomRef} />
       </div>
 
@@ -115,18 +104,18 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
           e.preventDefault();
           send(input);
         }}
-        className="flex gap-2 border-t border-white/10 p-4"
+        className="flex gap-2 border-t border-slate-200 bg-white p-3"
       >
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="e.g. Send the Adyar grocery order to Ravi"
-          className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:ring-2 focus:ring-fuchsia-400/20"
+          className="flex-1 rounded-lg border border-slate-300 px-3.5 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
         />
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="btn-glow rounded-xl px-6 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
           Send
         </button>
@@ -156,14 +145,14 @@ function ToolSteps({ steps }: { steps: AgentStep[] }) {
   return (
     <div className="space-y-1">
       {steps.map((s, i) => (
-        <details key={i} className="rounded-xl border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-slate-300">
+        <details key={i} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
           <summary className="cursor-pointer select-none">
-            <span className={s.ok ? "text-emerald-400" : "text-red-400"}>{s.ok ? "Done" : "Failed"}</span>
+            <span className={s.ok ? "text-emerald-600" : "text-red-600"}>{s.ok ? "Done" : "Failed"}</span>
             {" · "}
             <span className="font-mono font-medium">{s.tool}</span>
-            {s.writes && <span className="ml-2 rounded bg-amber-400/15 px-1.5 py-0.5 text-amber-300">writes data</span>}
+            {s.writes && <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-amber-800">writes data</span>}
           </summary>
-          <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-400">
+          <pre className="mt-1 overflow-x-auto whitespace-pre-wrap text-slate-500">
             {JSON.stringify({ args: s.args, ...(s.ok ? { result: s.result } : { error: s.error }) }, null, 2)}
           </pre>
         </details>

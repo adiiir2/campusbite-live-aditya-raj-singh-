@@ -30,23 +30,15 @@ const STATUS_LABEL: Record<string, string> = {
   in_transit: "On the road",
 };
 const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-amber-400/10 text-amber-300 ring-amber-400/30",
-  assigned: "bg-sky-400/10 text-sky-300 ring-sky-400/30",
-  in_transit: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/30",
+  pending: "bg-amber-50 text-amber-700 ring-amber-200",
+  assigned: "bg-blue-50 text-blue-700 ring-blue-200",
+  in_transit: "bg-emerald-50 text-emerald-700 ring-emerald-200",
 };
 const DRIVER_STYLE: Record<string, string> = {
-  available: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/30",
-  on_break: "bg-amber-400/10 text-amber-300 ring-amber-400/30",
-  off_duty: "bg-slate-400/10 text-slate-400 ring-slate-400/30",
+  available: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  on_break: "bg-amber-50 text-amber-700 ring-amber-200",
+  off_duty: "bg-slate-100 text-slate-600 ring-slate-200",
 };
-const AVATAR = [
-  "from-indigo-500 to-sky-500",
-  "from-fuchsia-500 to-rose-500",
-  "from-emerald-500 to-teal-500",
-  "from-amber-500 to-orange-500",
-  "from-violet-500 to-indigo-500",
-  "from-cyan-500 to-blue-500",
-];
 
 const initials = (name: string) =>
   name
@@ -84,9 +76,9 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
   const freeDrivers = drivers.filter((d) => d.status === "available").length;
 
   return (
-    <div className="glass fade-up overflow-hidden rounded-3xl">
+    <div className="card overflow-hidden">
       {/* tabs */}
-      <div className="flex gap-1.5 border-b border-white/10 p-2.5">
+      <div className="flex border-b border-slate-200">
         {(
           [
             ["deliveries", "Open deliveries", deliveries.length],
@@ -96,35 +88,35 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
-              tab === key ? "btn-glow text-white" : "text-slate-400 hover:bg-white/5 hover:text-white"
+            className={`flex flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-sm font-medium ${
+              tab === key ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:text-slate-800"
             }`}
           >
             {label}
-            <span className={`rounded-full px-2 py-0.5 text-xs ${tab === key ? "bg-white/25 text-white" : "bg-white/10 text-slate-300"}`}>{n}</span>
+            <span className={`rounded-full px-2 py-0.5 text-xs ${tab === key ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-600"}`}>{n}</span>
           </button>
         ))}
       </div>
 
-      {/* glowing stat tiles */}
-      <div className="grid grid-cols-3 gap-2.5 p-3">
+      {/* summary */}
+      <div className="grid grid-cols-3 divide-x divide-slate-200 border-b border-slate-200 bg-slate-50 text-center">
         {tab === "deliveries" ? (
           <>
-            <Stat label="Waiting" value={count("pending")} color="text-amber-300" glow="shadow-amber-500/20" />
-            <Stat label="Assigned" value={count("assigned")} color="text-sky-300" glow="shadow-sky-500/20" />
-            <Stat label="On the road" value={count("in_transit")} color="text-emerald-300" glow="shadow-emerald-500/20" />
+            <Stat label="Waiting" value={count("pending")} />
+            <Stat label="Assigned" value={count("assigned")} />
+            <Stat label="On the road" value={count("in_transit")} />
           </>
         ) : (
           <>
-            <Stat label="Available" value={freeDrivers} color="text-emerald-300" glow="shadow-emerald-500/20" />
-            <Stat label="Busy" value={drivers.filter((d) => d.open > 0).length} color="text-sky-300" glow="shadow-sky-500/20" />
-            <Stat label="Unavailable" value={drivers.length - freeDrivers} color="text-slate-300" glow="shadow-slate-500/10" />
+            <Stat label="Available" value={freeDrivers} />
+            <Stat label="Busy" value={drivers.filter((d) => d.open > 0).length} />
+            <Stat label="Unavailable" value={drivers.length - freeDrivers} />
           </>
         )}
       </div>
 
       {error && (
-        <p className="mx-3 mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p className="m-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}.{" "}
           <button onClick={() => setRetry((n) => n + 1)} className="underline">
             Try again
@@ -132,85 +124,73 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
         </p>
       )}
 
-      <div className="max-h-[46vh] space-y-2.5 overflow-y-auto px-3 pb-3">
+      <div className="max-h-[48vh] overflow-y-auto">
         {tab === "deliveries" ? (
-          <>
-            {!error && deliveries.length === 0 && <p className="p-6 text-center text-sm text-slate-500">No open deliveries.</p>}
+          <ul className="divide-y divide-slate-100">
+            {!error && deliveries.length === 0 && <li className="p-6 text-center text-sm text-slate-500">No open deliveries.</li>}
             {deliveries.map((d) => (
-              <div key={d.id} className="card-hover fade-up flex gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
-                <span
-                  className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                    d.priority === "urgent" ? "pulse-dot bg-red-500 text-red-500" : "bg-slate-600"
-                  }`}
-                />
+              <li key={d.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="truncate text-sm font-medium text-slate-900">
+                    #{d.id} · {d.customer}
+                    {d.priority === "urgent" && (
+                      <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-700">URGENT</span>
+                    )}
+                  </p>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ${STATUS_STYLE[d.status] ?? ""}`}>
+                    {STATUS_LABEL[d.status] ?? d.status}
+                  </span>
+                </div>
+                <p className="truncate text-xs text-slate-500">{d.address}</p>
+                <p className="mt-1 text-xs text-slate-600">
+                  {d.zone} · {d.weight_kg} kg · Due {d.deadline}
+                  {d.driver && <span className="font-medium text-slate-800"> · Driver: {d.driver}</span>}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {drivers.map((d) => (
+              <li key={d.id} className="flex items-center gap-3 px-4 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                  {initials(d.name)}
+                </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-white">
-                      #{d.id} · {d.customer}
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-medium text-slate-900">
+                      #{d.id} · {d.name}
                     </p>
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ${STATUS_STYLE[d.status] ?? ""}`}>
-                      {STATUS_LABEL[d.status] ?? d.status}
+                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ${DRIVER_STYLE[d.status] ?? ""}`}>
+                      {d.status.replace("_", " ")}
                     </span>
                   </div>
-                  <p className="truncate text-xs text-slate-400">{d.address}</p>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
-                    <Chip>{d.zone}</Chip>
-                    <Chip>{d.weight_kg} kg</Chip>
-                    <Chip>Due {d.deadline}</Chip>
-                    {d.priority === "urgent" && <span className="rounded-md bg-red-500/15 px-2 py-0.5 font-semibold text-red-300">URGENT</span>}
-                    {d.driver && <span className="rounded-md bg-fuchsia-500/15 px-2 py-0.5 font-medium text-fuchsia-300">{d.driver}</span>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </>
-        ) : (
-          drivers.map((d, i) => (
-            <div key={d.id} className="card-hover fade-up flex items-center gap-3.5 rounded-2xl border border-white/10 bg-white/[0.03] p-3.5">
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br text-sm font-bold text-white ${AVATAR[i % AVATAR.length]}`}>
-                {initials(d.name)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-white">
-                    #{d.id} · {d.name}
+                  <p className="text-xs capitalize text-slate-500">
+                    {d.vehicle} · up to {d.capacity_kg} kg · {d.zone}
                   </p>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs ring-1 ring-inset ${DRIVER_STYLE[d.status] ?? ""}`}>
-                    {d.status.replace("_", " ")}
-                  </span>
-                </div>
-                <p className="text-xs capitalize text-slate-400">
-                  {d.vehicle} · up to {d.capacity_kg} kg · {d.zone}
-                </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-fuchsia-400 transition-all duration-700"
-                      style={{ width: `${Math.min(100, (d.open / d.max_active) * 100)}%` }}
-                    />
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div className="h-full rounded-full bg-blue-500" style={{ width: `${Math.min(100, (d.open / d.max_active) * 100)}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      {d.open}/{d.max_active} deliveries
+                    </span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
-                    {d.open}/{d.max_active}
-                  </span>
                 </div>
-              </div>
-            </div>
-          ))
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>
   );
 }
 
-function Chip({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-md bg-white/[0.07] px-2 py-0.5 text-slate-300">{children}</span>;
-}
-
-function Stat({ label, value, color, glow }: { label: string; value: number; color: string; glow: string }) {
+function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className={`rounded-2xl border border-white/10 bg-white/[0.04] px-2 py-3 text-center shadow-lg ${glow}`}>
-      <p className={`text-3xl font-extrabold leading-none ${color}`}>{value}</p>
-      <p className="mt-1.5 text-[10px] font-medium uppercase tracking-widest text-slate-400">{label}</p>
+    <div className="px-2 py-2.5">
+      <p className="text-xl font-semibold text-slate-900">{value}</p>
+      <p className="text-[11px] uppercase tracking-wide text-slate-500">{label}</p>
     </div>
   );
 }

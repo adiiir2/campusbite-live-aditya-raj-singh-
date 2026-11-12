@@ -15,41 +15,42 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-10 pt-4 md:px-6">
-      <header className="glass fade-up mb-5 overflow-hidden rounded-3xl px-5 pb-4 pt-5 md:px-7">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <span className="btn-glow flex h-12 w-12 items-center justify-center rounded-2xl">
-              <TruckIcon className="h-6 w-6" />
+    <div className="min-h-screen">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 md:px-6">
+          <div className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <TruckIcon className="h-5 w-5" />
             </span>
             <div>
-              <h1 className="gradient-text text-2xl font-extrabold leading-tight tracking-tight md:text-3xl">DispatchIQ</h1>
-              <p className="text-xs text-slate-400 md:text-sm">Chennai Central Depot · Dispatcher: Meera Nair</p>
+              <h1 className="text-base font-semibold leading-tight text-slate-900">DispatchIQ</h1>
+              <p className="text-xs text-slate-500">Chennai Central Depot</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="hidden items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300 sm:flex">
-              <span className="pulse-dot h-2 w-2 rounded-full bg-emerald-400 text-emerald-400" /> Live
-            </span>
-            <button onClick={logout} className="rounded-xl border border-white/15 px-3.5 py-1.5 text-xs text-slate-300 transition hover:bg-white/10">
+          <div className="flex items-center gap-4 text-sm">
+            <span className="hidden text-slate-600 sm:block">Dispatcher: Meera Nair</span>
+            <button onClick={logout} className="rounded-lg border border-slate-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50">
               Log out
             </button>
           </div>
         </div>
-        <div className="road mt-6">
-          <TruckIcon className="truck h-7 w-7 text-fuchsia-300" />
-        </div>
       </header>
 
-      <div className="grid gap-5 lg:grid-cols-5">
-        <section className="lg:col-span-3">
-          <AgentChat onDataChanged={() => setRefreshKey((k) => k + 1)} />
-        </section>
-        <section className="lg:col-span-2">
-          <DispatchBoard refreshKey={refreshKey} />
-        </section>
-      </div>
-    </main>
+      <main className="mx-auto max-w-7xl px-4 py-5 md:px-6">
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-900">Dispatch console</h2>
+          <p className="text-sm text-slate-500">Assign deliveries to drivers by typing a request, and watch the board update.</p>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-5">
+          <section className="lg:col-span-3">
+            <AgentChat onDataChanged={() => setRefreshKey((k) => k + 1)} />
+          </section>
+          <section className="lg:col-span-2">
+            <DispatchBoard refreshKey={refreshKey} />
+          </section>
+        </div>
+      </main>
+    </div>
   );
 }
 
