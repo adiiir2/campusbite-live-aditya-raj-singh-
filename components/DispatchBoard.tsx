@@ -176,7 +176,7 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
                   <div className="mt-1.5 flex items-center gap-2">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full bg-sky-500"
+                        className="h-full rounded-full bg-indigo-500"
                         style={{ width: `${Math.min(100, (d.open / d.max_active) * 100)}%` }}
                       />
                     </div>
