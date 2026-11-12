@@ -28,8 +28,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-lg font-semibold">Enter team passcode</h1>
-        <p className="mt-1 text-sm text-slate-500">This keeps your app and your Gemini quota safe.</p>
+        <h1 className="text-lg font-semibold">DispatchIQ</h1>
+        <p className="mt-1 text-sm text-slate-500">Use the demo passcode below to open the dispatch console.</p>
         <input
           type="password"
           value={passcode}
@@ -39,6 +39,12 @@ export default function LoginPage() {
           autoFocus
         />
         {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+          Demo passcode: <span className="font-mono font-semibold text-slate-900">dispatch2026</span>{" "}
+          <button type="button" onClick={() => setPasscode("dispatch2026")} className="ml-1 text-blue-600 underline">
+            Fill it in
+          </button>
+        </p>
         <button
           type="submit"
           disabled={loading || !passcode}
