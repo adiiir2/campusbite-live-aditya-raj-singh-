@@ -27,31 +27,31 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-7 shadow-lg">
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600">
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <form onSubmit={handleSubmit} className="glass fade-up w-full max-w-sm rounded-3xl p-8">
+        <span className="btn-glow flex h-14 w-14 items-center justify-center rounded-2xl">
+          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z" />
             <circle cx="7" cy="18" r="1.6" />
             <circle cx="17" cy="18" r="1.6" />
           </svg>
         </span>
-        <h1 className="mt-4 text-xl font-bold tracking-tight">DispatchIQ</h1>
-        <p className="mt-1 text-sm text-slate-500">Enter the passcode to open the dispatch console.</p>
+        <h1 className="gradient-text mt-5 text-3xl font-extrabold tracking-tight">DispatchIQ</h1>
+        <p className="mt-1 text-sm text-slate-400">Enter the passcode to open the dispatch console.</p>
         <input
           type="password"
           value={passcode}
           onChange={(e) => setPasscode(e.target.value)}
-          className="mt-5 w-full rounded-xl border border-slate-300 px-3.5 py-2.5 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="mt-6 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-100 outline-none placeholder:text-slate-500 focus:border-fuchsia-400/60 focus:ring-2 focus:ring-fuchsia-400/20"
           placeholder="Passcode"
           autoFocus
         />
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
         <button
           type="submit"
           disabled={loading || !passcode}
-          className="mt-4 w-full rounded-xl bg-indigo-600 px-3 py-2.5 font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="btn-glow mt-4 w-full rounded-xl px-3 py-3 font-semibold text-white disabled:opacity-40"
         >
-          {loading ? "Checking..." : "Enter"}
+          {loading ? "Checking..." : "Enter console"}
         </button>
       </form>
     </main>
