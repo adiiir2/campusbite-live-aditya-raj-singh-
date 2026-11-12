@@ -20,9 +20,9 @@ export async function POST(request: Request) {
     const message = err instanceof Error ? err.message : "Agent failed";
     console.error("[agent]", message);
     const quota = /429|quota|RESOURCE_EXHAUSTED/i.test(message);
-    const busy = /503|UNAVAILABLE|high demand|timed out|abort/i.test(message);
+    const busy = /503|504|UNAVAILABLE|DEADLINE|high demand|timed out|abort|fetch failed/i.test(message);
     const text = quota
-      ? "Too many requests to Gemini. Wait a minute and try again."
+      ? "The Gemini free quota for this key is used up. Wait a minute, or switch to a fresh API key."
       : busy
         ? "Gemini is busy right now. Please send the request again in a few seconds."
         : "Something went wrong while handling that request. Please try again.";
