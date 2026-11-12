@@ -1,51 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #060913;
+  --bg: #0f172a;
 }
 
 body {
   @apply text-slate-100 antialiased;
   background: var(--bg);
   min-height: 100vh;
-}
-
-/* soft moving colour blobs behind everything */
-body::before,
-body::after {
-  content: "";
-  position: fixed;
-  z-index: -2;
-  width: 46rem;
-  height: 46rem;
-  border-radius: 9999px;
-  filter: blur(120px);
-  opacity: 0.35;
-  animation: drift 18s ease-in-out infinite alternate;
-}
-body::before {
-  top: -14rem;
-  left: -10rem;
-  background: #4f46e5;
-}
-body::after {
-  bottom: -16rem;
-  right: -10rem;
-  background: #c026d3;
-  animation-delay: -9s;
-}
-
-/* faint map grid */
-.grid-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse at 50% 0%, black 30%, transparent 75%);
 }
 
 .glass {
@@ -112,10 +74,6 @@ body::after {
   animation: drive 9s linear infinite;
 }
 
-@keyframes drift {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(6rem, 4rem) scale(1.15); }
-}
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
