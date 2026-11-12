@@ -18,7 +18,7 @@ export default function HomePage() {
     <main className="mx-auto max-w-6xl p-4 md:p-6">
       <header className="mb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">DispatchIQ</h1>
+          <h1 className="text-2xl font-bold tracking-tight">DispatchIQ</h1>
           <p className="text-sm text-slate-500">Chennai Central Depot · Dispatcher: Meera Nair</p>
         </div>
         <button onClick={logout} className="text-sm text-slate-500 hover:text-slate-900">

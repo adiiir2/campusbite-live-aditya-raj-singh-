@@ -53,8 +53,8 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
   }
 
   return (
-    <div className="flex h-[70vh] flex-col rounded-xl border border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-4 py-3">
+    <div className="flex h-[70vh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
         <h2 className="font-semibold">Dispatch assistant</h2>
         <p className="text-xs text-slate-500">Type a request. Every lookup and change it makes is listed under its reply.</p>
       </div>

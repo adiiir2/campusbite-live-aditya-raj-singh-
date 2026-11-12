@@ -11,7 +11,7 @@ export async function GET() {
   const [deliveries, drivers] = await Promise.all([
     db
       .from("deliveries")
-      .select("id, customer, zone, weight_kg, priority, deadline, status, drivers(name)")
+      .select("id, customer, address, zone, weight_kg, priority, deadline, status, driver_id, drivers(name)")
       .eq("dispatcher_id", CURRENT_USER_ID)
       .in("status", ["pending", "assigned", "in_transit"])
       .order("deadline")
@@ -33,5 +33,10 @@ export async function GET() {
     const drv = Array.isArray(d.drivers) ? d.drivers[0] : d.drivers;
     return { ...d, drivers: undefined, deadline: formatTime(d.deadline), driver: drv?.name ?? null };
   });
-  return NextResponse.json({ deliveries: rows, drivers: drivers.data });
+  // how many open deliveries each driver is carrying
+  const driversWithLoad = drivers.data.map((d) => ({
+    ...d,
+    open: deliveries.data.filter((x) => x.driver_id === d.id && x.status !== "pending").length,
+  }));
+  return NextResponse.json({ deliveries: rows, drivers: driversWithLoad });
 }
