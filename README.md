@@ -20,10 +20,17 @@ Driver must be available, in the delivery's zone, have enough vehicle capacity, 
 ## Tables
 `dispatchers`, `drivers`, `deliveries` (see `seed/logistics_dispatch.sql`).
 
-## Demo prompts
-1. "Which urgent deliveries still need a driver?"
-2. "Assign the pharmacy delivery to the best driver."
+## Demo prompts (run in this order)
+Each chat message uses 2-4 Gemini requests, so keep the demo short.
+
+1. "Which urgent deliveries still need a driver?" (shows the read tools)
+2. "Assign the pharmacy delivery to the best driver." (a write: it picks a T Nagar driver with enough capacity)
 3. "Give the furniture delivery to Karthik." (refused: wrong zone and too heavy)
+4. "Assign Metro Mart to Lakshmi." (refused: the delivery is already assigned)
+5. "Take the pharmacy delivery off its driver." (unassign; a delivery already on the road cannot be unassigned)
+6. "Write me a poem about cricket." (refused: off topic)
+
+To reset the data before a demo, run `seed/logistics_dispatch.sql` again in the Supabase SQL Editor.
 
 ## Setup
 1. `npm install`
