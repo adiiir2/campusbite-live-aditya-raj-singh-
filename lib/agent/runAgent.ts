@@ -18,6 +18,19 @@ const MAX_ROUNDS = 8;
  * 3. Send the results back to Gemini.
  * 4. Repeat until Gemini gives a final text answer (or MAX_ROUNDS is reached).
  */
+// Gemini sometimes answers 503 "high demand". Wait a little and try again (up to 4 tries).
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const busy = String(err).includes("503") || String(err).includes("UNAVAILABLE");
+      if (!busy || attempt >= 4) throw err;
+      await new Promise((r) => setTimeout(r, attempt * 3000));
+    }
+  }
+}
+
 export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
   const ai = getGemini();
   const steps: AgentStep[] = [];
@@ -29,7 +42,7 @@ export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
   }));
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    const response = await ai.models.generateContent({
+    const response = await withRetry(() => ai.models.generateContent({
       model: GEMINI_MODEL,
       contents,
       config: {
@@ -37,7 +50,7 @@ export async function runAgent(messages: ChatMessage[]): Promise<AgentResult> {
         tools: [{ functionDeclarations }],
         temperature: 0.2,
       },
-    });
+    }));
 
     const calls = response.functionCalls ?? [];
 
