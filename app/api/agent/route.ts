@@ -26,6 +26,6 @@ export async function POST(request: Request) {
       : busy
         ? "Gemini is busy right now. Please send the request again in a few seconds."
         : "Something went wrong while handling that request. Please try again.";
-    return NextResponse.json({ error: text }, { status: quota ? 429 : busy ? 503 : 500 });
+    return NextResponse.json({ error: text, detail: message.slice(0, 300) }, { status: quota ? 429 : busy ? 503 : 500 });
   }
 }
