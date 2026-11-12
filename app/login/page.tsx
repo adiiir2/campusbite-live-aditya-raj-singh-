@@ -28,8 +28,8 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h1 className="text-lg font-semibold">Enter team passcode</h1>
-        <p className="mt-1 text-sm text-slate-500">This keeps your app and your Gemini quota safe.</p>
+        <h1 className="text-lg font-semibold">DispatchIQ</h1>
+        <p className="mt-1 text-sm text-slate-500">Enter the passcode to open the dispatch console.</p>
         <input
           type="password"
           value={passcode}

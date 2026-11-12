@@ -5,7 +5,7 @@ import type { AgentResult, AgentStep } from "@/lib/agent/types";
 
 type Message = { role: "user" | "model"; text: string; steps?: AgentStep[] };
 
-// YOUR JOB: change these sample prompts to match your problem statement.
+// Quick-start requests shown in an empty chat.
 const SAMPLE_PROMPTS = [
   "Which urgent deliveries still need a driver?",
   "Assign the pharmacy delivery to the best driver.",
@@ -55,14 +55,14 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
   return (
     <div className="flex h-[70vh] flex-col rounded-xl border border-slate-200 bg-white">
       <div className="border-b border-slate-200 px-4 py-3">
-        <h2 className="font-semibold">Agent</h2>
-        <p className="text-xs text-slate-500">Ask in plain English. You can see every tool the agent uses.</p>
+        <h2 className="font-semibold">Dispatch assistant</h2>
+        <p className="text-xs text-slate-500">Type a request. Every lookup and change it makes is listed under its reply.</p>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && (
           <div className="space-y-2">
-            <p className="text-sm text-slate-500">Try one of these:</p>
+            <p className="text-sm text-slate-500">Quick requests</p>
             {SAMPLE_PROMPTS.map((p) => (
               <button
                 key={p}
@@ -96,7 +96,7 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
           </div>
         ))}
 
-        {loading && <p className="text-sm text-slate-500">Agent is working...</p>}
+        {loading && <p className="text-sm text-slate-500">Working on it...</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
         <div ref={bottomRef} />
       </div>
@@ -111,7 +111,7 @@ export default function AgentChat({ onDataChanged }: { onDataChanged?: () => voi
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your request..."
+          placeholder="e.g. Send the Adyar grocery order to Ravi"
           className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
         />
         <button

@@ -25,13 +25,15 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
+  const count = (s: string) => deliveries.filter((d) => d.status === s).length;
 
   useEffect(() => {
     const load = () =>
       fetch("/api/dispatch")
         .then(async (res) => {
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error ?? "Could not load");
+          if (!res.ok) throw new Error(data.error ?? "Could not load dispatch data");
           setDeliveries(data.deliveries);
           setDrivers(data.drivers);
           setError("");
@@ -40,17 +42,26 @@ export default function DispatchBoard({ refreshKey }: { refreshKey: number }) {
     load();
     const timer = setInterval(load, 5000);
     return () => clearInterval(timer);
-  }, [refreshKey]);
+  }, [refreshKey, retry]);
 
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-4 py-3">
           <h2 className="font-semibold">Open deliveries</h2>
-          <p className="text-xs text-slate-500">Live from Supabase.</p>
+          <p className="text-xs text-slate-500">
+            {count("pending")} waiting · {count("assigned")} assigned · {count("in_transit")} on the road
+          </p>
         </div>
         <ul className="divide-y divide-slate-100">
-          {error && <li className="p-4 text-sm text-red-600">{error}</li>}
+          {error && (
+            <li className="p-4 text-sm text-red-600">
+              {error}.{" "}
+              <button onClick={() => setRetry((n) => n + 1)} className="underline">
+                Try again
+              </button>
+            </li>
+          )}
           {!error && deliveries.length === 0 && <li className="p-4 text-sm text-slate-500">No open deliveries.</li>}
           {deliveries.map((d) => (
             <li key={d.id} className="flex items-start justify-between gap-2 px-4 py-2.5 text-sm">

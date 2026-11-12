@@ -26,7 +26,7 @@ export async function GET() {
   const error = deliveries.error ?? drivers.error;
   if (error || !deliveries.data || !drivers.data) {
     console.error("[GET /api/dispatch]", error?.message);
-    return NextResponse.json({ error: "Could not load dispatch data" }, { status: 500 });
+    return NextResponse.json({ error: "Could not reach the database" }, { status: 500 });
   }
 
   const rows = deliveries.data.map((d) => {
